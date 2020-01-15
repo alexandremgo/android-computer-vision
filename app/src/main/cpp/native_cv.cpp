@@ -22,6 +22,11 @@
 #include <android/native_window_jni.h>
 #include <media/NdkImage.h>
 
+#include "opencv2/imgproc.hpp"
+
+static void CannyThreshold(const cv::Mat &src, cv::Mat &out) {
+}
+
 // This value is 2 ^ 18 - 1, and is used to clamp the RGB values before their
 // ranges
 // are normalized to eight bits.
@@ -181,7 +186,6 @@ Java_com_mgo_computervision_Camera2ProcessFragment_processImage(
                         + "\n | row stride y = " + std::to_string(srcRowStride_y)
                         + " & row stride uv = " + std::to_string(srcRowStride_uv)
                         + " & pixel stride uv = " + std::to_string(srcPixelStride_uv);
-
 
     ANativeWindow_unlockAndPost(dstWin);
     ANativeWindow_release(dstWin);
