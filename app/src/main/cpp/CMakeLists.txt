@@ -11,7 +11,7 @@ include_directories(${pathToOpenCV}/sdk/native/jni/include)
 # Creates and names a library, sets it as either STATIC
 # or SHARED, and provides the relative paths to its source code.
 # Gradle automatically packages shared libraries with your APK.
-add_library(native-cv SHARED native_cv.cpp )
+add_library(native-cv SHARED native_cv.cpp format_image.cpp process_image.cpp)
 
 # Searches for a specified prebuilt library and stores the path as a
 # variable. Because CMake includes system libraries in the search path by

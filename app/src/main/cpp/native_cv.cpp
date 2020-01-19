@@ -17,68 +17,12 @@
 
 #include <jni.h>
 #include <string>
-
 #include <android/native_window.h>
 #include <android/native_window_jni.h>
 #include <media/NdkImage.h>
 
-#include "opencv2/imgproc.hpp"
-
-static void CannyThreshold(const cv::Mat &src, cv::Mat &out) {
-}
-
-// This value is 2 ^ 18 - 1, and is used to clamp the RGB values before their
-// ranges
-// are normalized to eight bits.
-static const int kMaxChannelValue = 262143;
-
-/**
- * Helper function for YUV_420 to RGB conversion. Courtesy of Tensorflow
- * ImageClassifier Sample:
- * https://github.com/tensorflow/tensorflow/blob/master/tensorflow/examples/android/jni/yuv2rgb.cc
- * The difference is that here we have to swap UV plane when calling it.
- */
-#ifndef MAX
-#define MAX(a, b)           \
-  ({                        \
-    __typeof__(a) _a = (a); \
-    __typeof__(b) _b = (b); \
-    _a > _b ? _a : _b;      \
-  })
-#define MIN(a, b)           \
-  ({                        \
-    __typeof__(a) _a = (a); \
-    __typeof__(b) _b = (b); \
-    _a < _b ? _a : _b;      \
-  })
-#endif
-
-static inline uint32_t YUV2RGB(int nY, int nU, int nV) {
-    nY -= 16;
-    nU -= 128;
-    nV -= 128;
-    if (nY < 0) nY = 0;
-
-    // This is the floating point equivalent. We do the conversion in integer
-    // because some Android devices do not have floating point in hardware.
-    // nR = (int)(1.164 * nY + 1.596 * nV);
-    // nG = (int)(1.164 * nY - 0.813 * nV - 0.391 * nU);
-    // nB = (int)(1.164 * nY + 2.018 * nU);
-
-    int nR = (int)(1192 * nY + 1634 * nV);
-    int nG = (int)(1192 * nY - 833 * nV - 400 * nU);
-    int nB = (int)(1192 * nY + 2066 * nU);
-
-    nR = MIN(kMaxChannelValue, MAX(0, nR));
-    nG = MIN(kMaxChannelValue, MAX(0, nG));
-    nB = MIN(kMaxChannelValue, MAX(0, nB));
-
-    nR = (nR >> 10) & 0xff;
-    nG = (nG >> 10) & 0xff;
-    nB = (nB >> 10) & 0xff;
-
-    return 0xff000000 | (nR << 16) | (nG << 8) | nB;
-}
+#include "format_image.h"
+#include "process_image.h"
 
 /**
  * - row stride: distance between the start of two consecutive rows of pixels in the image.
@@ -186,6 +130,10 @@ Java_com_mgo_computervision_Camera2ProcessFragment_processImage(
                         + "\n | row stride y = " + std::to_string(srcRowStride_y)
                         + " & row stride uv = " + std::to_string(srcRowStride_uv)
                         + " & pixel stride uv = " + std::to_string(srcPixelStride_uv);
+
+    uint32_t *processedImg = static_cast<uint32_t *>(dstBuf.bits);
+
+    applyCanny(processedImg, width, height, 30, 3, 3);
 
     ANativeWindow_unlockAndPost(dstWin);
     ANativeWindow_release(dstWin);
